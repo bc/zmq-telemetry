@@ -9,15 +9,8 @@ source = ColumnDataSource(dict(x=[], y=[], avg=[]))
 fig1 = Figure()
 fig1.line(x='x', y='y', source=source, line_width=2, alpha=0.85, color='red')
 fig1.line(x='x', y='avg', source=source, line_width=2, alpha=0.85, color='blue')
-#fig2 = Figure()
-#fig1.vbar(x='x', top='y', width=0.9, alpha=0.5)
-#print 'x'
-#hist, edges = np.histogram('x')
-#print "x, hist, edges", x, hist, edges
-#fig2.quad(top=hist, bottom=0, left=edges[:-1], right=edges[1:])
 #fig2.patch('x', 'y', color='green', alpha=0.6, line_color="black", source=source)
 #fig2.patch('x', 'avg', color='yellow', alpha=0.6, line_color="black", source=source)
-#p = gridplot([[fig1,fig2]])
 
 ctr = 0
 sine_sum = 0
