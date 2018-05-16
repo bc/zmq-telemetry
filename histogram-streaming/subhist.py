@@ -16,16 +16,11 @@ socket.connect('tcp://127.0.0.1:1234')
 
 source = ColumnDataSource(dict(x=[], y=[], avg=[]))
 
-fig1 = Figure()
-fig1.line(x='x', y='y', source=source, line_width=2, alpha=0.85, color='red')
-fig1.line(x='x', y='avg', source=source, line_width=2, alpha=0.85, color='blue')
-fig2 = Figure()
-text_input = TextInput(value='10', title="Label:")
 timer_cnt = 0
-patch_flag = True
+
 index = 0
 def update_data():
-    global timer_cnt, index, patch_flag
+    global timer_cnt, index, stream
     timer_cnt += 1
     start = time.time()
     string = socket.recv()
@@ -34,15 +29,24 @@ def update_data():
     #print(x, y, avg)
     new_data = dict(x=[x], y=[y], avg=[avg])
     source.stream(new_data,10)
-    #pdb.set_trace()
+
+    if timer_cnt%50 == 0:
+        print("elapsed time = ", time.time()-start)
+
+def update():
+    layout.children[0] = generate_figure()
+
+def generate_figure():
+    global source
+    fig2 = Figure()
+    update_data()
     hist, edges = np.histogram(source.data['y'])
     #print("x,y,avg", source.data['x'], source.data['y'], source.data['avg'])
     #print("hist",hist)
     fig2.quad(top=hist, bottom=0, left=edges[:-1], right=edges[1:])
-    if timer_cnt%50 == 0:
-        print("elapsed time = ", time.time()-start)
+    return (fig2)
 
 
-p = row(fig1,fig2,text_input)
-curdoc().add_periodic_callback(update_data, 1)
-curdoc().add_root(p)
+layout = row(generate_figure())
+curdoc().add_periodic_callback(update, 1)
+curdoc().add_root(layout)
