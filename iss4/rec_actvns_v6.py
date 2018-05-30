@@ -68,7 +68,7 @@ def update():
 def create_figline():
     global source
     update_data()
-    colors = ["#762a83","#76EEC6","#53868B","#FF1493","#ADFF2F","#292421","#FFE1FF"]
+    colors = ["#762a83","#76EEC6","#53868B","#FF1493","#ADFF2F","#292421","#EE6A50"]
     figlist = []
     for muscle_index in range(7):
         fig = figure(plot_width=250, plot_height=250, title=None)
