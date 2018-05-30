@@ -1,6 +1,6 @@
 from bokeh.io import curdoc
 from bokeh.models import ColumnDataSource
-from bokeh.plotting import Figure
+from bokeh.plotting import figure
 from bokeh.layouts import gridplot, row
 import numpy as np
 import time
@@ -38,10 +38,13 @@ command_M4=[],
 command_M5=[],
 command_M6=[]))
 
-fig1 = Figure()
+fig1 = figure()
+#fig1.multi_line(xs=[[time],[time]], ys=[[measured_M0], [command_M0]], source=source, line_width=2, alpha=0.85, color=['red','blue'])
+# fig2 = Figure()
+# fig2.line(x='time', y='command_M1', source=source, line_width=2, alpha=0.85, color='blue')
 fig1.line(x='time', y='measured_M0', source=source, line_width=2, alpha=0.85, color='red')
-fig2 = Figure()
-fig2.line(x='time', y='command_M1', source=source, line_width=2, alpha=0.85, color='blue')
+fig1.line(x='time', y='command_M1', source=source, line_width=2, alpha=0.85, color='blue')
+
 
 def update_data():
     global socket
@@ -53,7 +56,7 @@ def update_data():
         #[forces, targetforces, commands] = message
         measuredForces = message[0][0]
         targetForces = message[0][1]
-        commands = message[0][2]
+        commands = [message[0][0][i]-message[0][1][i] for i in range(7)]
         timestamp = message[1]
         # print("FORCES",message[0][0])
         # print("TARGETFORCES",message[0][1])
@@ -76,6 +79,6 @@ port = '12345'
 socket = initialize_sub_socket(ip, port)
 
 curdoc().add_periodic_callback(update_data, 1)
-curdoc().add_root(row(fig1,fig2))
+curdoc().add_root(fig1)
 
 #cProfile.run(re.compile("curdoc().add_periodic_callback(update_data, 1)"))
