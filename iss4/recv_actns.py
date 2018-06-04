@@ -9,6 +9,7 @@ import random
 import zmq
 import pickle
 import pdb
+import time
 
 def initialize_sub_socket(ip, port_sub, port_serv, topic_filter=b"map"):
     context = zmq.Context()
@@ -50,27 +51,24 @@ def update_data():
     i = i+1
     #print("IN UPDATE DATA",i+1)
     try:
-        print(socket_sub, socket_pull)
+        #print(socket_sub, socket_pull)
         poller = zmq.Poller()
         poller.register(socket_sub, zmq.POLLIN)
         poller.register(socket_pull, zmq.POLLIN)
         socks = dict(poller.poll())
-        # poller.poll(1000)
+
         if socket_pull in socks and socks[socket_pull] == zmq.POLLIN:
-        #if poller.pollin(0):
             print("PULLING")
-            time.sleep(3)
             msg = socket_pull.recv()
             new_referenceForce = (pickle.loads(msg, encoding="latin1"))
             referenceForces = new_referenceForce[0]
             print("## PULL ##",referenceForces)
             ref_flag = False
             print("Recieved control command: %s" % referenceForces)
-            socket_pull.send_string("Received reference Force")
+            socket_pull.send_string(str(time.time()))
             #socket_pull.send("Received reference Force")
 
         if socket_sub in socks and socks[socket_sub] == zmq.POLLIN:
-        #if poller.pollin(1):
             print("PUBBING")
             [topic, msg] = socket_sub.recv_multipart()
             #print("VALUES", msg)
@@ -115,7 +113,6 @@ port_serv = '5556'
 socket_sub, socket_pull = initialize_sub_socket(ip, port_sub, port_serv)
 
 
-curdoc().add_periodic_callback(update, 10)
-#column(row(plots), sizing_mode='scale_width')
+curdoc().add_periodic_callback(update, 1)
 main_layout = column(create_figline(), sizing_mode='scale_width')
 curdoc().add_root(main_layout)
