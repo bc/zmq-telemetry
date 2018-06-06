@@ -107,6 +107,10 @@ def create_figline():
     return figlist
 
 ip = '127.0.0.1'
+brian = False
+if brian:
+    ip = '169.254.12.240'
+
 #ip = '10.42.0.82'
 port_sub = '12345'
 port_serv = '5556'
