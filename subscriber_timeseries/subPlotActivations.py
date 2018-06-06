@@ -64,7 +64,7 @@ def update_data():
             [topic, msg] = socket_sub.recv_multipart()
             #print("VALUES", msg)
             message = (pickle.loads(msg, encoding="latin1"))
-            print("values", message)
+            #print("values", message)
             measuredForces = message[0][0]
             referenceForces = message[0][1]
             #residualForces = [message[0][0][i]-message[0][1][i] for i in range(7)]
@@ -79,7 +79,6 @@ def update_data():
 
     except KeyboardInterrupt:
         socket_sub.close()
-        socket_pull.close()
 
 def update():
     global main_layout
@@ -92,15 +91,15 @@ def create_figline():
     colors = ["#762a83","#76EEC6","#53868B","#FF1493","#ADFF2F","#292421","#EE6A50"]
     figlist = []
     for muscle_index in range(7):
-        fig = figure(plot_width=2000, plot_height=180, title=None)
+        fig = figure(plot_width=2000, plot_height=180, y_range=(0,1), title=None)
         fig.line(source=source, x='time', y='measured_M%s' %muscle_index, line_width=2, alpha=0.85, color=colors[muscle_index])
         fig.line(source=source, x='time', y='reference_M%s' %muscle_index, line_width=2, alpha=0.85, color='blue')
         figlist.append(fig)
     return figlist
 
 
-socket_sub = initialize_sub_socket(ip, port_sub, port_serv)
-
+socket_sub = initialize_sub_socket(ip, port_sub)
+print("Latency")
 curdoc().add_periodic_callback(update, 1)
 main_layout = column(create_figline())
 curdoc().add_root(main_layout)
