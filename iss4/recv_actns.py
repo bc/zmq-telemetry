@@ -109,6 +109,7 @@ def create_figline():
 ip = '127.0.0.1'
 #ip = '10.42.0.82'
 port_sub = '1234'
+port_sub = '12345'
 port_serv = '5556'
 socket_sub, socket_pull = initialize_sub_socket(ip, port_sub, port_serv)
 
