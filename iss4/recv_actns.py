@@ -80,6 +80,7 @@ def update_data():
             #residualForces = [message[0][0][i]-message[0][1][i] for i in range(7)]
             commands = message[0][2]
             timestamp = message[1]
+            print("%s"%(str(time.time()-timestamp)))
             print("## PUBB ##",referenceForces)
             new_data = dict(time=[timestamp],measured_M0=[measuredForces[0]],measured_M1=[measuredForces[1]],measured_M2=[measuredForces[2]],measured_M3=[measuredForces[3]],measured_M4=[measuredForces[4]],measured_M5=[measuredForces[0]],measured_M6=[measuredForces[6]],reference_M0=[referenceForces[0]],reference_M1=[referenceForces[1]],reference_M2=[referenceForces[2]],reference_M3=[referenceForces[3]],reference_M4=[referenceForces[4]],reference_M5=[referenceForces[5]],reference_M6=[referenceForces[6]])
 
