@@ -17,7 +17,7 @@ def publish_observation(initialized_socket):
     topic = b"map"
     while True:
         global k
-        k = k+1
+        k = k+1 #flag to show we're publishing
         measuredForces = []
         referenceForces = []
         commands = []
