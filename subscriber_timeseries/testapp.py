@@ -1,3 +1,4 @@
+import pdb
 from functools import partial
 from random import random
 from threading import Thread
@@ -7,7 +8,6 @@ from bokeh.models import ColumnDataSource
 from bokeh.plotting import curdoc, figure
 
 from tornado import gen
-
 # this must only be modified from a Bokeh session callback
 source = ColumnDataSource(data=dict(x=[0], y=[0]))
 
@@ -15,23 +15,25 @@ source = ColumnDataSource(data=dict(x=[0], y=[0]))
 # see the same document.
 doc = curdoc()
 
+
 @gen.coroutine
 def update(x, y):
-    source.stream(dict(x=[x], y=[y]))
+    source.stream(dict(x=[x], y=[y]), 50)
+
 
 def blocking_task():
+    global doc
     while True:
         # do some blocking computation
-        time.sleep(0.1)
+        time.sleep(0.01)
         x, y = random(), random()
-
         # but update the document from callback
         doc.add_next_tick_callback(partial(update, x=x, y=y))
 
-p = figure(x_range=[0, 1], y_range=[0,1])
-l = p.circle(x='x', y='y', source=source)
+figure_xy = figure(x_range=[0, 1], y_range=[0,1])
+line_glypth = figure_xy.line(x='x', y='y', source=source)
 
-doc.add_root(p)
+doc.add_root(figure_xy)
 
 thread = Thread(target=blocking_task)
 thread.start()

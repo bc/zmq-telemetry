@@ -7,7 +7,6 @@ import time
 import cProfile
 import random
 import zmq
-import pickle
 import pdb
 import time
 from helper_functions import *
@@ -24,6 +23,7 @@ else:
 
 port_sub = '12345'
 
+data_collection_buffer = []
 
 source = ColumnDataSource(dict(time=[], measured_M0=[],
                                measured_M1=[],
@@ -45,41 +45,23 @@ ref_flag = True
 
 
 def update_data():
-    global socket_sub, poller
+    global socket_sub, poller, data_collection_buffer
     try:
-        poller.register(socket_sub, zmq.POLLIN)
-        socks = dict(poller.poll())
-        if socket_sub in socks and socks[socket_sub] == zmq.POLLIN:
-            [topic, msg] = socket_sub.recv_multipart()
-            message = (pickle.loads(msg, encoding="latin1"))
-            measuredForces = message[0][0]
-            referenceForces = message[0][1]
-            commands = message[0][2]
-            timestamp = message[1]
-            print("%s" % (str(time.time() - timestamp)))
-            # print("## PUBB ##",referenceForces)
-            # TODO create a function that returns measured and ref Forces in proper fmt
-            new_data = dict(time=[timestamp], measured_M0=[measuredForces[0]], measured_M1=[measuredForces[1]], measured_M2=[measuredForces[2]], measured_M3=[measuredForces[3]], measured_M4=[measuredForces[4]], measured_M5=[measuredForces[0]], measured_M6=[
-                            measuredForces[6]], reference_M0=[referenceForces[0]], reference_M1=[referenceForces[1]], reference_M2=[referenceForces[2]], reference_M3=[referenceForces[3]], reference_M4=[referenceForces[4]], reference_M5=[referenceForces[5]], reference_M6=[referenceForces[6]])
-            source.stream(new_data, 100)
-
+        print('add to buffer')
+        data_collection_buffer += [poll_via_zmq_socket_subscriber(socket_sub, poller)]
     except KeyboardInterrupt:
         print("CLEAN UP CLEAN UP EVERYBODY CLEANUP")
         while not socket_sub.closed:
             print("close the socket!")
             socket_sub.close()
-
-
-def make_clean_exit(socket_sub):
-    while not socket_sub.closed:
-        print("close the socket!")
-        socket_sub.close()
-
-
-def update():
-    global main_layout
-    for i in range(7):
-        main_layout.children[i] = create_figline()[i]
+    buffer_size = len(data_collection_buffer)
+    
+    if buffer_size > 100:
+        print('buffer overflowed.')
+        for i in range(0, buffer_size):
+            print('streaming buffer_i, i=%s' % i)
+            source.stream(data_collection_buffer[i], 100)
+        data_collection_buffer = [] #clear
 
 
 def create_figline():
@@ -98,10 +80,18 @@ def create_figline():
         figlist.append(fig)
     return figlist
 
+def update():
+    global main_layout
+    for i in range(7):
+        main_layout.children[i] = create_figline()[i]
+
+
+
 
 socket_sub = initialize_sub_socket(ip, port_sub)
 poller = zmq.Poller()
 print("Latency")
-curdoc().add_periodic_callback(update, 1)
+doc = curdoc()
+doc.add_periodic_callback(update, 1)
 main_layout = column(create_figline())
-curdoc().add_root(main_layout)
+doc.add_root(main_layout)
