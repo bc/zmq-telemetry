@@ -6,6 +6,8 @@ import time
 from bokeh.layouts import gridplot, row, layout, column
 from bokeh.models import ColumnDataSource
 from bokeh.plotting import curdoc, figure
+from bokeh.models import LinearAxis, Range1d
+from bokeh.models import Span
 
 from tornado import gen
 from helper_functions import *
@@ -35,19 +37,27 @@ doc = curdoc()
 
 @gen.coroutine
 def update(data_collection_buffer):
-    source.stream(data_collection_buffer,100)
+    source.stream(data_collection_buffer,250)
 
-def blocking_task():
+def modify_to_plot(messagedata):
+    '''These are not the actual forces in newtons
+        Modified to accomodate in a single graph'''
+    gap = 1.0
+    for i in range(7):
+        messagedata['measured_M%s' % i] = [(messagedata['measured_M%s' % i][0]+(i)*gap)]
+        messagedata['reference_M%s' % i] = [(messagedata['reference_M%s' % i][0]+(i)*gap)]
+    return messagedata
+
+def subscribe_and_stream():
     while True:
         # do some blocking computation
-        time.sleep(0.1)
-        x, y = random(), random()
+        #time.sleep(0.1)
         global socket_sub, poller, data_collection_buffer, source
         try:
-            print('add to buffer')
-            data_collection_buffer = poll_via_zmq_socket_subscriber(socket_sub, poller)
+            messagedata = poll_via_zmq_socket_subscriber(socket_sub, poller)
             # but update the document from callback
-            doc.add_next_tick_callback(partial(update, data_collection_buffer))
+            modifiedMsgData = modify_to_plot(messagedata)
+            doc.add_next_tick_callback(partial(update, modifiedMsgData))
 
         except KeyboardInterrupt:
             print("CLEAN UP CLEAN UP EVERYBODY CLEANUP")
@@ -58,19 +68,23 @@ def blocking_task():
 
 colors = ["#762a83", "#76EEC6", "#53868B",
           "#FF1493", "#ADFF2F", "#292421", "#EE6A50"]
-figlist = []
+
+fig = figure(plot_width=2000, plot_height=750, y_range=(0,7))
+
+lower_lt = 0.5
+upper_lt = 1.5
 for muscle_index in range(7):
-    fig = figure(plot_width=2000, plot_height=180,
-                 y_range=(0, 1), title=None)
+    loc = ((muscle_index+1)*lower_lt + (muscle_index+1)*upper_lt)/2.0
+    line = Span(location=loc, dimension='width', line_color='black', line_dash='dashed', line_width=1)
+    fig.add_layout(line)
     fig.line(source=source, x='time', y='measured_M%s' % muscle_index,
              line_width=2, alpha=0.85, color=colors[muscle_index])
-    fig.line(source=source, x='time', y='reference_M%s' %
-             muscle_index, line_width=2, alpha=0.85, color='blue')
-    figlist.append(fig)
-doc.add_root(column(figlist))
+    fig.line(source=source, x='time', y='reference_M%s' %muscle_index, line_width=2, alpha=0.85, color='blue')
+
+doc.add_root(fig)
 
 socket_sub = initialize_sub_socket(ip, port_sub)
 poller = zmq.Poller()
 
-thread = Thread(target=blocking_task)
+thread = Thread(target=subscribe_and_stream)
 thread.start()
