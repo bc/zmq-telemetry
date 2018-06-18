@@ -31,7 +31,7 @@ else:
 
 port_sub = '12345'
 
-source = ColumnDataSource(dict(time=[],residual_M0=[],residual_M1=[],residual_M2=[],residual_M3=[],residual_M4=[],residual_M5=[],residual_M6=[]))
+source = ColumnDataSource(dict(residual_M0=[],residual_M1=[],residual_M2=[],residual_M3=[],residual_M4=[],residual_M5=[],residual_M6=[],edges_M0=[], edges_M1=[], edges_M2=[], edges_M3=[], edges_M4=[], edges_M5=[], edges_M6=[]))
 
 doc = curdoc()
 
@@ -50,7 +50,7 @@ def modify_to_plot(messagedata):
 
 def subscribe_and_stream():
     while True:
-        global socket_sub
+        global socket_sub, fig
         try:
             poller = zmq.Poller()
             poller.register(socket_sub, zmq.POLLIN)
@@ -67,14 +67,15 @@ def subscribe_and_stream():
                 commands = message[0][2]
                 timestamp = message[1]
                 print("residualForces", residualForces)
-                #global edges
-                #hist, edges = np.histogram(residualForces)
-                messagedata = dict(time=[timestamp],residual_M0=[residualForces[0]],residual_M1=[residualForces[1]],residual_M2=[residualForces[2]],residual_M3=[residualForces[3]],residual_M4=[residualForces[4]],residual_M5=[residualForces[5]],residual_M6=[residualForces[6]])
-                # dict(residual_M0=[hist[0]],residual_M1=[hist[1]],residual_M2=[hist[2]],residual_M3=[hist[3]],residual_M4=[hist[4]],hist=[residualForces[5]],residual_M6=[hist[6]])
-                # #print(new_data)
+                hist, edges = np.histogram(residualForces)
+                messagedata =  dict(residual_M0=[hist[0]],residual_M1=[hist[1]],residual_M2=[hist[2]],residual_M3=[hist[3]],residual_M4=[hist[4]],residual_M5=[hist[5]],residual_M6=[hist[6]],edges_M0=[edges[0]],edges_M1=[edges[1]],edges_M2=[edges[2]],edges_M3=[edges[3]],edges_M4=[edges[4]],edges_M5=[edges[5]],edges_M6=[edges[6]])
 
-                modifiedHistData = modify_to_plot(messagedata)
-                doc.add_next_tick_callback(partial(update, modifiedHistData))
+                # dict(time=[timestamp],residual_M0=[residualForces[0]],residual_M1=[residualForces[1]],residual_M2=[residualForces[2]],residual_M3=[residualForces[3]],residual_M4=[residualForces[4]],residual_M5=[residualForces[5]],residual_M6=[residualForces[6]])
+                #
+                #print(new_data)
+
+                #modifiedHistData = modify_to_plot(messagedata)
+                doc.add_next_tick_callback(partial(update, messagedata))
 
         except KeyboardInterrupt:
             print("CLEAN UP CLEAN UP EVERYBODY CLEANUP")
@@ -86,23 +87,12 @@ def subscribe_and_stream():
 colors = ["#762a83", "#76EEC6", "#53868B",
           "#FF1493", "#ADFF2F", "#292421", "#EE6A50"]
 
+muscle_index = 0
 fig = figure(plot_width=2000, plot_height=750, y_range=(0,7))
-
-lower_lt = 0.5
-upper_lt = 1.5
-for muscle_index in range(7):
-    muscle = 'residual_M%s' %muscle_index
-    loc = ((muscle_index+1)*lower_lt + (muscle_index+1)*upper_lt)/2.0
-    line = Span(location=loc, dimension='width', line_color='black', line_dash='dashed', line_width=1)
-    fig.add_layout(line)
-    #fig.line(source=source, x='time', y='residual_M%s' % muscle_index,line_width=2, alpha=0.85, color=colors[muscle_index])
-
-    #data_values = stats[ column ].tolist()
-    hist, edges = np.histogram(source.data[muscle])
-    fig.quad(top='residual_M%s' % muscle_index, bottom=0, left=edges[:-1], right=edges[1:], fill_color=colors[muscle_index])
+fig.line(source=source, x='residual_M%s' % muscle_index, y='edges_M0', line_width=2, alpha=0.85, color=colors[muscle_index])
+fig.quad(top='residual_M%s' % muscle_index, bottom=0, left='edges_M0'[:-1], right='edges_M0'[1:], fill_color=colors[muscle_index], source=source)
 
 doc.add_root(fig)
-
 socket_sub = initialize_sub_socket(ip, port_sub)
 print("Plotting Histogram...")
 
