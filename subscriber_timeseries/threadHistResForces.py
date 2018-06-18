@@ -31,13 +31,12 @@ else:
 
 port_sub = '12345'
 
-source = ColumnDataSource(dict(residual_M0=[],residual_M1=[],residual_M2=[],residual_M3=[],residual_M4=[],residual_M5=[],residual_M6=[],edges_M0=[], edges_M1=[], edges_M2=[], edges_M3=[], edges_M4=[], edges_M5=[], edges_M6=[]))
-
 doc = curdoc()
 
 @gen.coroutine
-def update(modifiedHistData):
-    source.stream(modifiedHistData,100)
+def update(residualForces):
+    hist, edges = np.histogram(residualForces)
+    fig.quad(top=hist, bottom=0, left=edges[:-1], right=edges[1:])
 
 def modify_to_plot(messagedata):
     '''These are not the actual forces in newtons
@@ -48,7 +47,10 @@ def modify_to_plot(messagedata):
     print("messagedata", messagedata)
     return messagedata
 
+hist = []
+edges = []
 def subscribe_and_stream():
+    global fig
     while True:
         global socket_sub, fig
         try:
@@ -67,15 +69,7 @@ def subscribe_and_stream():
                 commands = message[0][2]
                 timestamp = message[1]
                 print("residualForces", residualForces)
-                hist, edges = np.histogram(residualForces)
-                messagedata =  dict(residual_M0=[hist[0]],residual_M1=[hist[1]],residual_M2=[hist[2]],residual_M3=[hist[3]],residual_M4=[hist[4]],residual_M5=[hist[5]],residual_M6=[hist[6]],edges_M0=[edges[0]],edges_M1=[edges[1]],edges_M2=[edges[2]],edges_M3=[edges[3]],edges_M4=[edges[4]],edges_M5=[edges[5]],edges_M6=[edges[6]])
-
-                # dict(time=[timestamp],residual_M0=[residualForces[0]],residual_M1=[residualForces[1]],residual_M2=[residualForces[2]],residual_M3=[residualForces[3]],residual_M4=[residualForces[4]],residual_M5=[residualForces[5]],residual_M6=[residualForces[6]])
-                #
-                #print(new_data)
-
-                #modifiedHistData = modify_to_plot(messagedata)
-                doc.add_next_tick_callback(partial(update, messagedata))
+                doc.add_next_tick_callback(partial(update, residualForces))
 
         except KeyboardInterrupt:
             print("CLEAN UP CLEAN UP EVERYBODY CLEANUP")
@@ -89,8 +83,6 @@ colors = ["#762a83", "#76EEC6", "#53868B",
 
 muscle_index = 0
 fig = figure(plot_width=2000, plot_height=750, y_range=(0,7))
-fig.line(source=source, x='residual_M%s' % muscle_index, y='edges_M0', line_width=2, alpha=0.85, color=colors[muscle_index])
-fig.quad(top='residual_M%s' % muscle_index, bottom=0, left='edges_M0'[:-1], right='edges_M0'[1:], fill_color=colors[muscle_index], source=source)
 
 doc.add_root(fig)
 socket_sub = initialize_sub_socket(ip, port_sub)
