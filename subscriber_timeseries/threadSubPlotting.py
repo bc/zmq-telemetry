@@ -12,7 +12,16 @@ from bokeh.models import Span
 from tornado import gen
 from helper_functions import *
 
-ip = '127.0.0.1'
+rpi_emulator = True
+brian = False
+
+if rpi_emulator:
+    ip = '127.0.0.1'
+elif brian:
+    ip = '169.254.12.240'
+else:
+    ip = '10.42.0.82'
+
 port_sub = '12345'
 
 # this must only be modified from a Bokeh session callback
@@ -36,8 +45,8 @@ source = ColumnDataSource(dict(time=[], measured_M0=[],
 doc = curdoc()
 
 @gen.coroutine
-def update(data_collection_buffer):
-    source.stream(data_collection_buffer,250)
+def update(modifiedMsgData):
+    source.stream(modifiedMsgData,100)
 
 def modify_to_plot(messagedata):
     '''These are not the actual forces in newtons
@@ -62,8 +71,8 @@ def subscribe_and_stream():
         except KeyboardInterrupt:
             print("CLEAN UP CLEAN UP EVERYBODY CLEANUP")
             while not socket_sub.closed:
-                print("close the socket!")
-                socket_sub.close()
+                #TODO check if fn is in right place
+                make_clean_exit(socket_sub)
 
 
 colors = ["#762a83", "#76EEC6", "#53868B",
