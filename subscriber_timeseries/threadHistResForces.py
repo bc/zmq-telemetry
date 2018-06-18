@@ -33,7 +33,7 @@ port_sub = '12345'
 
 doc = curdoc()
 
-source = ColumnDataSource(dict(residual_M0=[],residual_M1=[],residual_M2=[],residual_M3=[],residual_M4=[],residual_M5=[],residual_M6=[]))
+source = ColumnDataSource(dict(hist_M0=[],hist_M1=[],hist_M2=[],hist_M3=[],hist_M4=[],hist_M5=[],hist_M6=[],ledges_M0=[], ledges_M1=[], ledges_M2=[], ledges_M3=[], ledges_M4=[], ledges_M5=[], ledges_M6=[], redges_M0=[], redges_M1=[], redges_M2=[], redges_M3=[], redges_M4=[], redges_M5=[], redges_M6=[]))
 
 @gen.coroutine
 def update(residualForces):
@@ -60,9 +60,20 @@ def subscribe_and_stream():
                 residualForces = [np.abs(message[0][0][i]-message[0][1][i]) for i in range(7)]
                 commands = message[0][2]
                 timestamp = message[1]
-                print("residualForces", residualForces)
-                new_data = dict(residual_M0=[residualForces[0]],residual_M1=[residualForces[1]],residual_M2=[residualForces[2]],residual_M3=[residualForces[3]],residual_M4=[residualForces[4]],residual_M5=[residualForces[5]],residual_M6=[residualForces[6]])
-                doc.add_next_tick_callback(partial(update,new_data))
+                #print("residualForces", residualForces)
+                hist = []
+                edges = []
+                for i in range(7):
+                    histogram  = np.histogram(residualForces[i])
+                    hist.append(histogram[0])
+                    edges.append(histogram[1])
+                print("HIST",hist[0][0],type(hist[0][0]))
+                #print("edges",edges)
+                messagedata =  dict(hist_M0=hist[0].tolist(),hist_M1=hist[1].tolist(),hist_M2=hist[2].tolist(),hist_M3=hist[3].tolist(),hist_M4=hist[4].tolist(),hist_M5=hist[5].tolist(),hist_M6=hist[6].tolist(),ledges_M0=edges[0][:-1].tolist(),ledges_M1=edges[1][:-1].tolist(),ledges_M2=edges[2][:-1].tolist(),ledges_M3=edges[3][:-1].tolist(),ledges_M4=edges[4][:-1].tolist(),ledges_M5=edges[5][:-1].tolist(),ledges_M6=edges[6][:-1].tolist(), redges_M0=edges[0][1:].tolist(),redges_M1=edges[1][1:].tolist(),redges_M2=edges[2][1:].tolist(),redges_M3=edges[3][1:].tolist(),redges_M4=edges[4][1:].tolist(),redges_M5=edges[5][1:].tolist(),redges_M6=edges[6][1:].tolist())
+
+                print(messagedata)
+
+                doc.add_next_tick_callback(partial(update,messagedata))
 
         except KeyboardInterrupt:
             print("CLEAN UP CLEAN UP EVERYBODY CLEANUP")
@@ -76,17 +87,7 @@ colors = ["#762a83", "#76EEC6", "#53868B",
 
 muscle_index = 0
 fig = figure(plot_width=2000, plot_height=750, y_range=(0,7))
-#i = 1
-hist = [0 for i in range(7)]
-edges = [0 for i in range(7)]
-#for i in range(7):
-muscle='residual_M0'
-#print("source data",source.data[muscle])
-#hist, edges = np.histogram(source.data['residual_M0'])
-
-fig.quad(top='residual_M0',bottom=0,left='residual_M1',right='residual_M2',source=source)
-
-# fig.quad(top=[hist[0],hist[1],hist[2],hist[3],hist[4],hist[5],hist[6]], bottom=[0,1,2,3,4,5,6,], left=[edges[0][:-1],edges[1][:-1],edges[2][:-1],edges[3][:-1],edges[4][:-1],edges[5][:-1],edges[6][:-1]], right=[edges[0][1:],edges[1][1:],edges[2][1:],edges[3][1:],edges[4][1:],edges[5][1:],edges[6][1:]])
+fig.quad(top='hist_M0',bottom=0,left='ledges_M0',right='redges_M0',source=source)
 
 doc.add_root(fig)
 socket_sub = initialize_sub_socket(ip, port_sub)
