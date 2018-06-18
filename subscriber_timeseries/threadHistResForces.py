@@ -33,16 +33,11 @@ port_sub = '12345'
 
 doc = curdoc()
 
+source = ColumnDataSource(dict(residual_M0=[],residual_M1=[],residual_M2=[],residual_M3=[],residual_M4=[],residual_M5=[],residual_M6=[]))
+
 @gen.coroutine
 def update(residualForces):
-    global fig
-    #i = 1
-    hist = [0 for i in range(7)]
-    edges = [0 for i in range(7)]
-    for i in range(7):
-        hist[i], edges[i] = np.histogram(residualForces[i])
-    fig.quad(top=[hist[0],hist[1],hist[2],hist[3],hist[4],hist[5],hist[6]], bottom=[0,1,2,3,4,5,6,], left=[edges[0][:-1],edges[1][:-1],edges[2][:-1],edges[3][:-1],edges[4][:-1],edges[5][:-1],edges[6][:-1]], right=[edges[0][1:],edges[1][1:],edges[2][1:],edges[3][1:],edges[4][1:],edges[5][1:],edges[6][1:]])
-
+    source.stream(residualForces,100)
 
 hist = []
 edges = []
@@ -66,7 +61,8 @@ def subscribe_and_stream():
                 commands = message[0][2]
                 timestamp = message[1]
                 print("residualForces", residualForces)
-                doc.add_next_tick_callback(partial(update,residualForces))
+                new_data = dict(residual_M0=[residualForces[0]],residual_M1=[residualForces[1]],residual_M2=[residualForces[2]],residual_M3=[residualForces[3]],residual_M4=[residualForces[4]],residual_M5=[residualForces[5]],residual_M6=[residualForces[6]])
+                doc.add_next_tick_callback(partial(update,new_data))
 
         except KeyboardInterrupt:
             print("CLEAN UP CLEAN UP EVERYBODY CLEANUP")
@@ -80,6 +76,17 @@ colors = ["#762a83", "#76EEC6", "#53868B",
 
 muscle_index = 0
 fig = figure(plot_width=2000, plot_height=750, y_range=(0,7))
+#i = 1
+hist = [0 for i in range(7)]
+edges = [0 for i in range(7)]
+#for i in range(7):
+muscle='residual_M0'
+#print("source data",source.data[muscle])
+#hist, edges = np.histogram(source.data['residual_M0'])
+
+fig.quad(top='residual_M0',bottom=0,left='residual_M1',right='residual_M2',source=source)
+
+# fig.quad(top=[hist[0],hist[1],hist[2],hist[3],hist[4],hist[5],hist[6]], bottom=[0,1,2,3,4,5,6,], left=[edges[0][:-1],edges[1][:-1],edges[2][:-1],edges[3][:-1],edges[4][:-1],edges[5][:-1],edges[6][:-1]], right=[edges[0][1:],edges[1][1:],edges[2][1:],edges[3][1:],edges[4][1:],edges[5][1:],edges[6][1:]])
 
 doc.add_root(fig)
 socket_sub = initialize_sub_socket(ip, port_sub)
