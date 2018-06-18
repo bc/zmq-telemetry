@@ -36,11 +36,13 @@ doc = curdoc()
 @gen.coroutine
 def update(residualForces):
     global fig
+    #i = 1
     hist = [0 for i in range(7)]
     edges = [0 for i in range(7)]
     for i in range(7):
         hist[i], edges[i] = np.histogram(residualForces[i])
     fig.quad(top=[hist[0],hist[1],hist[2],hist[3],hist[4],hist[5],hist[6]], bottom=[0,1,2,3,4,5,6,], left=[edges[0][:-1],edges[1][:-1],edges[2][:-1],edges[3][:-1],edges[4][:-1],edges[5][:-1],edges[6][:-1]], right=[edges[0][1:],edges[1][1:],edges[2][1:],edges[3][1:],edges[4][1:],edges[5][1:],edges[6][1:]])
+
 
 hist = []
 edges = []
