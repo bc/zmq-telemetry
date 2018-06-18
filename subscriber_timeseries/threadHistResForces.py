@@ -85,9 +85,14 @@ def subscribe_and_stream():
 colors = ["#762a83", "#76EEC6", "#53868B",
           "#FF1493", "#ADFF2F", "#292421", "#EE6A50"]
 
-muscle_index = 0
-fig = figure(plot_width=2000, plot_height=750, y_range=(0,7))
-fig.quad(top='hist_M0',bottom=0,left='ledges_M0',right='redges_M0',source=source)
+lower_lt = 0.5
+upper_lt = 1.5
+fig = figure(plot_width=750, plot_height=750, y_range=(0,7))
+for i in range(7):
+    loc = ((i+1)*lower_lt + (i+1)*upper_lt)/2.0
+    line = Span(location=loc, dimension='width', line_color='black', line_dash='dashed', line_width=1)
+    fig.add_layout(line)
+    fig.quad(top='hist_M%s'%i,bottom=i,left='ledges_M%s'%i,right='redges_M%s'%i,source=source)
 
 doc.add_root(fig)
 socket_sub = initialize_sub_socket(ip, port_sub)
