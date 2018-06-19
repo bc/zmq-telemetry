@@ -48,7 +48,6 @@ def modify_to_plot():
         histogram  = np.histogram(source_forces.data['residual_M%s'%i])
         for j in range(len(histogram[1])):
             histogram[1][j] = (histogram[1][j] + i*1)
-        print("histogram[1]",histogram[1])
         hist.append(histogram[0])
         edges.append(histogram[1])
     return(hist,edges)
