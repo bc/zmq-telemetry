@@ -33,11 +33,13 @@ port_sub = '12345'
 
 doc = curdoc()
 
-source = ColumnDataSource(dict(hist_M0=[],hist_M1=[],hist_M2=[],hist_M3=[],hist_M4=[],hist_M5=[],hist_M6=[],ledges_M0=[], ledges_M1=[], ledges_M2=[], ledges_M3=[], ledges_M4=[], ledges_M5=[], ledges_M6=[], redges_M0=[], redges_M1=[], redges_M2=[], redges_M3=[], redges_M4=[], redges_M5=[], redges_M6=[]))
+source_forces = ColumnDataSource(dict(time=[],residual_M0=[],residual_M1=[],residual_M2=[],residual_M3=[],residual_M4=[],residual_M5=[],residual_M6=[]))
+source_plot = ColumnDataSource(dict(hist_M0=[],hist_M1=[],hist_M2=[],hist_M3=[],hist_M4=[],hist_M5=[],hist_M6=[],ledges_M0=[], ledges_M1=[], ledges_M2=[], ledges_M3=[], ledges_M4=[], ledges_M5=[], ledges_M6=[], redges_M0=[], redges_M1=[], redges_M2=[], redges_M3=[], redges_M4=[], redges_M5=[], redges_M6=[]))
 
 @gen.coroutine
-def update(residualForces):
-    source.stream(residualForces,100)
+def update(plotData,residualForces):
+    source_forces.stream(residualForces,100)
+    source_plot.stream(plotData,100)
 
 hist = []
 edges = []
@@ -64,19 +66,20 @@ def subscribe_and_stream():
                 hist = []
                 edges = []
                 for i in range(7):
-                    histogram  = np.histogram(residualForces[i])
+                    histogram  = np.histogram(source_forces.data['residual_M%s'%i])
                     for j in range(len(histogram[1])):
                         histogram[1][j] = (histogram[1][j] + i*1)
                     print("histogram[1]",histogram[1])
                     hist.append(histogram[0])
                     edges.append(histogram[1])
-                #print("HIST",hist,type(hist))
-                #print("",edges)
-                messagedata =  dict(hist_M0=hist[0].tolist(),hist_M1=hist[1].tolist(),hist_M2=hist[2].tolist(),hist_M3=hist[3].tolist(),hist_M4=hist[4].tolist(),hist_M5=hist[5].tolist(),hist_M6=hist[6].tolist(),ledges_M0=edges[0][:-1].tolist(),ledges_M1=edges[1][:-1].tolist(),ledges_M2=edges[2][:-1].tolist(),ledges_M3=edges[3][:-1].tolist(),ledges_M4=edges[4][:-1].tolist(),ledges_M5=edges[5][:-1].tolist(),ledges_M6=edges[6][:-1].tolist(),redges_M0=edges[0][1:].tolist(),redges_M1=edges[1][1:].tolist(),redges_M2=edges[2][1:].tolist(),redges_M3=edges[3][1:].tolist(),redges_M4=edges[4][1:].tolist(),redges_M5=edges[5][1:].tolist(),redges_M6=edges[6][1:].tolist())
+
+                residualForces = dict(time=[timestamp],residual_M0=[residualForces[0]],residual_M1=[residualForces[1]],residual_M2=[residualForces[2]],residual_M3=[residualForces[3]],residual_M4=[residualForces[4]],residual_M5=[residualForces[5]],residual_M6=[residualForces[6]])
+
+                plotData =  dict(hist_M0=hist[0].tolist(),hist_M1=hist[1].tolist(),hist_M2=hist[2].tolist(),hist_M3=hist[3].tolist(),hist_M4=hist[4].tolist(),hist_M5=hist[5].tolist(),hist_M6=hist[6].tolist(),ledges_M0=edges[0][:-1].tolist(),ledges_M1=edges[1][:-1].tolist(),ledges_M2=edges[2][:-1].tolist(),ledges_M3=edges[3][:-1].tolist(),ledges_M4=edges[4][:-1].tolist(),ledges_M5=edges[5][:-1].tolist(),ledges_M6=edges[6][:-1].tolist(),redges_M0=edges[0][1:].tolist(),redges_M1=edges[1][1:].tolist(),redges_M2=edges[2][1:].tolist(),redges_M3=edges[3][1:].tolist(),redges_M4=edges[4][1:].tolist(),redges_M5=edges[5][1:].tolist(),redges_M6=edges[6][1:].tolist())
 
                 #print(messagedata)
 
-                doc.add_next_tick_callback(partial(update,messagedata))
+                doc.add_next_tick_callback(partial(update,plotData,residualForces))
 
         except KeyboardInterrupt:
             print("CLEAN UP CLEAN UP EVERYBODY CLEANUP")
@@ -94,7 +97,7 @@ for muscle_index in range(7):
     loc = gap*muscle_index
     line = Span(location=loc, dimension='height', line_color='black', line_dash='dashed', line_width=1)
     fig.add_layout(line)
-    fig.quad(source=source, top='hist_M%s'%muscle_index, bottom=0, left='ledges_M%s'%muscle_index, right='redges_M%s'%muscle_index, color=colors[muscle_index])
+    fig.quad(source=source_plot, top='hist_M%s'%muscle_index, bottom=0, left='ledges_M%s'%muscle_index, right='redges_M%s'%muscle_index, color=colors[muscle_index])
 
 doc.add_root(fig)
 socket_sub = initialize_sub_socket(ip, port_sub)
