@@ -65,13 +65,16 @@ def subscribe_and_stream():
                 edges = []
                 for i in range(7):
                     histogram  = np.histogram(residualForces[i])
+                    for j in range(len(histogram[1])):
+                        histogram[1][j] = (histogram[1][j] + i*1)
+                    print("histogram[1]",histogram[1])
                     hist.append(histogram[0])
                     edges.append(histogram[1])
-                print("HIST",hist[0][0],type(hist[0][0]))
-                #print("edges",edges)
-                messagedata =  dict(hist_M0=hist[0].tolist(),hist_M1=hist[1].tolist(),hist_M2=hist[2].tolist(),hist_M3=hist[3].tolist(),hist_M4=hist[4].tolist(),hist_M5=hist[5].tolist(),hist_M6=hist[6].tolist(),ledges_M0=edges[0][:-1].tolist(),ledges_M1=edges[1][:-1].tolist(),ledges_M2=edges[2][:-1].tolist(),ledges_M3=edges[3][:-1].tolist(),ledges_M4=edges[4][:-1].tolist(),ledges_M5=edges[5][:-1].tolist(),ledges_M6=edges[6][:-1].tolist(), redges_M0=edges[0][1:].tolist(),redges_M1=edges[1][1:].tolist(),redges_M2=edges[2][1:].tolist(),redges_M3=edges[3][1:].tolist(),redges_M4=edges[4][1:].tolist(),redges_M5=edges[5][1:].tolist(),redges_M6=edges[6][1:].tolist())
+                #print("HIST",hist,type(hist))
+                #print("",edges)
+                messagedata =  dict(hist_M0=hist[0].tolist(),hist_M1=hist[1].tolist(),hist_M2=hist[2].tolist(),hist_M3=hist[3].tolist(),hist_M4=hist[4].tolist(),hist_M5=hist[5].tolist(),hist_M6=hist[6].tolist(),ledges_M0=edges[0][:-1].tolist(),ledges_M1=edges[1][:-1].tolist(),ledges_M2=edges[2][:-1].tolist(),ledges_M3=edges[3][:-1].tolist(),ledges_M4=edges[4][:-1].tolist(),ledges_M5=edges[5][:-1].tolist(),ledges_M6=edges[6][:-1].tolist(),redges_M0=edges[0][1:].tolist(),redges_M1=edges[1][1:].tolist(),redges_M2=edges[2][1:].tolist(),redges_M3=edges[3][1:].tolist(),redges_M4=edges[4][1:].tolist(),redges_M5=edges[5][1:].tolist(),redges_M6=edges[6][1:].tolist())
 
-                print(messagedata)
+                #print(messagedata)
 
                 doc.add_next_tick_callback(partial(update,messagedata))
 
@@ -85,14 +88,13 @@ def subscribe_and_stream():
 colors = ["#762a83", "#76EEC6", "#53868B",
           "#FF1493", "#ADFF2F", "#292421", "#EE6A50"]
 
-lower_lt = 0.5
-upper_lt = 1.5
-fig = figure(plot_width=750, plot_height=750, y_range=(0,7))
-for i in range(7):
-    loc = ((i+1)*lower_lt + (i+1)*upper_lt)/2.0
-    line = Span(location=loc, dimension='width', line_color='black', line_dash='dashed', line_width=1)
+gap = 1
+fig = figure(plot_width=1400, plot_height=700, x_range=(0,7))
+for muscle_index in range(7):
+    loc = gap*muscle_index
+    line = Span(location=loc, dimension='height', line_color='black', line_dash='dashed', line_width=1)
     fig.add_layout(line)
-    fig.quad(top='hist_M%s'%i,bottom=i,left='ledges_M%s'%i,right='redges_M%s'%i,source=source)
+    fig.quad(source=source, top='hist_M%s'%muscle_index, bottom=0, left='ledges_M%s'%muscle_index, right='redges_M%s'%muscle_index, color=colors[muscle_index])
 
 doc.add_root(fig)
 socket_sub = initialize_sub_socket(ip, port_sub)
