@@ -19,7 +19,7 @@ from threading import Thread
 from tornado import gen
 from helper_functions import *
 
-rpi_emulator = False
+rpi_emulator = True
 brian = False
 
 if rpi_emulator:
@@ -34,6 +34,7 @@ port_sub = '12345'
 doc = curdoc()
 
 source_forces = ColumnDataSource(dict(time=[],residual_M0=[],residual_M1=[],residual_M2=[],residual_M3=[],residual_M4=[],residual_M5=[],residual_M6=[]))
+
 source_plot = ColumnDataSource(dict(hist_M0=[],hist_M1=[],hist_M2=[],hist_M3=[],hist_M4=[],hist_M5=[],hist_M6=[],ledges_M0=[], ledges_M1=[], ledges_M2=[], ledges_M3=[], ledges_M4=[], ledges_M5=[], ledges_M6=[], redges_M0=[], redges_M1=[], redges_M2=[], redges_M3=[], redges_M4=[], redges_M5=[], redges_M6=[]))
 
 @gen.coroutine
@@ -74,11 +75,14 @@ def subscribe_and_stream():
 
                 measuredForces = message[0][0]
                 referenceForces = message[0][1]
-                ### using absolute difference ###
                 residualForces = [(message[0][0][i]-message[0][1][i]) for i in range(7)]
                 commands = message[0][2]
                 timestamp = message[1]
-                print(timestamp-time.time())
+                diff = time.time() - timestamp
+                print(diff)
+                # if diff > 0.001:
+                #     print("RESET CONNECTION")
+                #     socket_sub = initialize_sub_socket(ip, port_sub)
                 hist,edges = modify_to_plot()
                 residualForces, plotData = compose_column_data_source_entry(timestamp, residualForces, hist, edges)
                 doc.add_next_tick_callback(partial(update,plotData,residualForces))

@@ -12,7 +12,7 @@ from bokeh.models import Span
 from tornado import gen
 from helper_functions import *
 
-rpi_emulator = False
+rpi_emulator = True
 brian = False
 
 if rpi_emulator:
@@ -65,6 +65,9 @@ def subscribe_and_stream():
         try:
             messagedata = poll_via_zmq_socket_subscriber(socket_sub, poller)
             # but update the document from callback
+            timestamp = (messagedata['time'][0])
+            diff = time.time() - timestamp
+            print(diff, type(diff))
             modifiedMsgData = modify_to_plot(messagedata)
             doc.add_next_tick_callback(partial(update, modifiedMsgData))
 

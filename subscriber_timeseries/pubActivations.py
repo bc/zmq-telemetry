@@ -7,6 +7,7 @@ import random
 def instantiate_zmq_publisher(port=12345):
     context = zmq.Context()
     socket = context.socket(zmq.PUB)
+    #socket.setsockopt(zmq.SNDHWM, 1000)
     socket.bind("tcp://*:%s" %port)
     print('Initializing ZMQ pubstream socket')
     return(socket)
