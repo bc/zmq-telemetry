@@ -8,6 +8,7 @@ from bokeh.models import ColumnDataSource
 from bokeh.plotting import curdoc, figure
 from bokeh.models import LinearAxis, Range1d
 from bokeh.models import Span
+from bokeh.models import DatetimeTickFormatter
 
 from tornado import gen
 from helper_functions import *
@@ -67,7 +68,7 @@ def subscribe_and_stream():
             # but update the document from callback
             timestamp = (messagedata['time'][0])
             diff = time.time() - timestamp
-            print(diff, type(diff))
+            print(diff)
             modifiedMsgData = modify_to_plot(messagedata)
             doc.add_next_tick_callback(partial(update, modifiedMsgData))
 
@@ -82,6 +83,7 @@ colors = ["#762a83", "#76EEC6", "#53868B",
           "#FF1493", "#ADFF2F", "#292421", "#EE6A50"]
 
 fig = figure(plot_width=2000, plot_height=750, y_range=(0,7))
+fig.xaxis.formatter = DatetimeTickFormatter(microseconds=['%fus'])
 
 lower_lt = 0.5
 upper_lt = 1.5
