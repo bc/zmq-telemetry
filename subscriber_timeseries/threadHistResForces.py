@@ -19,7 +19,7 @@ from threading import Thread
 from tornado import gen
 from helper_functions import *
 
-rpi_emulator = True
+rpi_emulator = False
 brian = False
 
 if rpi_emulator:
@@ -75,10 +75,10 @@ def subscribe_and_stream():
                 measuredForces = message[0][0]
                 referenceForces = message[0][1]
                 ### using absolute difference ###
-                residualForces = [np.abs(message[0][0][i]-message[0][1][i]) for i in range(7)]
+                residualForces = [(message[0][0][i]-message[0][1][i]) for i in range(7)]
                 commands = message[0][2]
                 timestamp = message[1]
-
+                print(timestamp-time.time())
                 hist,edges = modify_to_plot()
                 residualForces, plotData = compose_column_data_source_entry(timestamp, residualForces, hist, edges)
                 doc.add_next_tick_callback(partial(update,plotData,residualForces))
@@ -92,7 +92,7 @@ colors = ["#762a83", "#76EEC6", "#53868B",
           "#FF1493", "#ADFF2F", "#292421", "#EE6A50"]
 
 gap = 1
-fig = figure(plot_width=1400, plot_height=700, x_range=(0,7))
+fig = figure(plot_width=1400, plot_height=700, x_range=(-0.5,6.5))
 for muscle_index in range(7):
     loc = gap*muscle_index
     line = Span(location=loc, dimension='height', line_color='black', line_dash='dashed', line_width=1)
