@@ -12,7 +12,7 @@ from bokeh.models import Span
 from tornado import gen
 from helper_functions import *
 
-rpi_emulator = True
+rpi_emulator = False
 brian = False
 
 if rpi_emulator:
