@@ -47,7 +47,10 @@ doc = curdoc()
 
 @gen.coroutine
 def update(modifiedMsgData):
+    global fig, flag, xbound
     source.stream(modifiedMsgData,100)
+    if flag:
+        fig.x_range.end = xbound
 
 def modify_to_plot(messagedata):
     '''These are not the actual forces in newtons
@@ -58,17 +61,29 @@ def modify_to_plot(messagedata):
         messagedata['reference_M%s' % i] = [(messagedata['reference_M%s' % i][0]+(i)*gap)]
     return messagedata
 
+cnt = 0
+xbound = 0
+flag = False
 def subscribe_and_stream():
     while True:
         # do some blocking computation
         #time.sleep(0.1)
-        global socket_sub, poller, data_collection_buffer, source
+        global socket_sub, poller, data_collection_buffer, source, cnt, fig, xbound
         try:
+            flag = False
             messagedata = poll_via_zmq_socket_subscriber(socket_sub, poller)
             # but update the document from callback
             timestamp = (messagedata['time'][0])
             diff = time.time() - timestamp
+            print(len(source.data['measured_M0']))
             print(diff)
+            if cnt == 0:
+                flag = True
+                xbound = timestamp
+                #fig.x_range.end = timestamp
+            cnt += 1
+            if cnt == 100:
+                cnt = 0
             modifiedMsgData = modify_to_plot(messagedata)
             doc.add_next_tick_callback(partial(update, modifiedMsgData))
 
@@ -77,13 +92,15 @@ def subscribe_and_stream():
             while not socket_sub.closed:
                 #TODO check if fn is in right place
                 make_clean_exit(socket_sub)
+                
+def dynamic_bound():
 
 
 colors = ["#762a83", "#76EEC6", "#53868B",
           "#FF1493", "#ADFF2F", "#292421", "#EE6A50"]
 
-fig = figure(plot_width=2000, plot_height=750, y_range=(0,7))
-fig.xaxis.formatter = DatetimeTickFormatter(microseconds=['%fus'])
+fig = figure(plot_width=2000, plot_height=750, x_range=dynamic_bound(), y_range=(0,7))
+#fig.xaxis.formatter = DatetimeTickFormatter(microseconds=['%fus'])
 
 lower_lt = 0.5
 upper_lt = 1.5
