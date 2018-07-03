@@ -45,25 +45,38 @@ doc = curdoc()
 
 @gen.coroutine
 def update(modifiedMsgData):
-    global fig,cnt
+    global fig,cnt,source
     source.stream(modifiedMsgData,100)
     print("CHANGE", time.time())
     print("XBOUND: ",source.data['time'])
+    fig.x_range.start = time.time()
     print(len(source.data['time']), type(source.data['time']))
-    if cnt == 0:
-        fig.x_range.start = time.time()
     cnt += 1
     print(cnt)
     if cnt == 60:
         print("INDEX")
-        try:
-            ind = (source.data['time'].index(time.time()))
-            print(ind)
-        except:
-            print(source.data['time'][-1])
-            source.stream()
-            print("continue")
         cnt = 0
+        source.data = source = ColumnDataSource(dict(time=[], measured_M0=[],
+                                       measured_M1=[],
+                                       measured_M2=[],
+                                       measured_M3=[],
+                                       measured_M4=[],
+                                       measured_M5=[],
+                                       measured_M6=[],
+                                       reference_M0=[],
+                                       reference_M1=[],
+                                       reference_M2=[],
+                                       reference_M3=[],
+                                       reference_M4=[],
+                                       reference_M5=[],
+                                       reference_M6=[]))
+        # try:
+        #     ind = (source.data['time'].index(time.time()))
+        #     print(ind)
+        # except:
+        #     print(source.data['time'][-1])
+        #     print("continue")
+        #source.data =
 
 def modify_to_plot(messagedata):
     '''These are not the actual forces in newtons
@@ -77,8 +90,6 @@ def modify_to_plot(messagedata):
 cnt = 0
 def subscribe_and_stream():
     while True:
-        # do some blocking computation
-        #time.sleep(0.1)
         global socket_sub, poller, data_collection_buffer, source, cnt, fig, xbound
         try:
             flag = False
@@ -88,6 +99,7 @@ def subscribe_and_stream():
             diff = time.time() - timestamp
             print(diff)
             modifiedMsgData = modify_to_plot(messagedata)
+            print("source.data",source.data, type(source.data))
             doc.add_next_tick_callback(partial(update, modifiedMsgData))
 
         except KeyboardInterrupt:
