@@ -47,11 +47,22 @@ doc = curdoc()
 def update(modifiedMsgData):
     global fig,cnt
     source.stream(modifiedMsgData,100)
+    print("CHANGE", time.time())
+    print("XBOUND: ",source.data['time'])
+    print(len(source.data['time']), type(source.data['time']))
     if cnt == 0:
-        fig.x_range.start = source.data['time'][0]
-        print("XBOUND: "source.data['time'][0])
+        fig.x_range.start = time.time()
     cnt += 1
-    if cnt == 50:
+    print(cnt)
+    if cnt == 60:
+        print("INDEX")
+        try:
+            ind = (source.data['time'].index(time.time()))
+            print(ind)
+        except:
+            print(source.data['time'][-1])
+            source.stream()
+            print("continue")
         cnt = 0
 
 def modify_to_plot(messagedata):
@@ -75,9 +86,7 @@ def subscribe_and_stream():
             # but update the document from callback
             timestamp = (messagedata['time'][0])
             diff = time.time() - timestamp
-            time_lists = source.data['time']
-            if len(time_lists) != 0:
-                print(time_lists[0])
+            print(diff)
             modifiedMsgData = modify_to_plot(messagedata)
             doc.add_next_tick_callback(partial(update, modifiedMsgData))
 
@@ -87,15 +96,10 @@ def subscribe_and_stream():
                 #TODO check if fn is in right place
                 make_clean_exit(socket_sub)
 
-#def dynamic_bound():
-
-
 colors = ["#762a83", "#76EEC6", "#53868B",
           "#FF1493", "#ADFF2F", "#292421", "#EE6A50"]
 
-#x_range = FactorRange(factors=['a', 'b', 'c'])
 fig = figure(plot_width=2000, plot_height=750, y_range=(0,7))
-#fig.xaxis.formatter = DatetimeTickFormatter(microseconds=['%fus'])
 
 lower_lt = 0.5
 upper_lt = 1.5
