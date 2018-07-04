@@ -46,37 +46,15 @@ doc = curdoc()
 @gen.coroutine
 def update(modifiedMsgData):
     global fig,cnt,source
+    fig.x_range.start = (time.time()-2)
+    fig.x_range.end = time.time()
+    source.data['time'] = list(reversed(source.data['time']))
+    print(type(source.data['reference_M1']))
+    for i in range(7):
+        source.data['measured_M%s'%i] = list(reversed(source.data['measured_M%s'%i]))
+        source.data['reference_M%s'%i] = list(reversed(source.data['reference_M%s'%i]))
     source.stream(modifiedMsgData,100)
-    print("CHANGE", time.time())
-    print("XBOUND: ",source.data['time'])
-    fig.x_range.start = time.time()
-    print(len(source.data['time']), type(source.data['time']))
-    cnt += 1
-    print(cnt)
-    if cnt == 60:
-        print("INDEX")
-        cnt = 0
-        source.data = source = ColumnDataSource(dict(time=[], measured_M0=[],
-                                       measured_M1=[],
-                                       measured_M2=[],
-                                       measured_M3=[],
-                                       measured_M4=[],
-                                       measured_M5=[],
-                                       measured_M6=[],
-                                       reference_M0=[],
-                                       reference_M1=[],
-                                       reference_M2=[],
-                                       reference_M3=[],
-                                       reference_M4=[],
-                                       reference_M5=[],
-                                       reference_M6=[]))
-        # try:
-        #     ind = (source.data['time'].index(time.time()))
-        #     print(ind)
-        # except:
-        #     print(source.data['time'][-1])
-        #     print("continue")
-        #source.data =
+
 
 def modify_to_plot(messagedata):
     '''These are not the actual forces in newtons
@@ -96,10 +74,11 @@ def subscribe_and_stream():
             messagedata = poll_via_zmq_socket_subscriber(socket_sub, poller)
             # but update the document from callback
             timestamp = (messagedata['time'][0])
+            print("time.time",time.time())
+            print("timestamp",timestamp)
             diff = time.time() - timestamp
-            print(diff)
+            #print(diff)
             modifiedMsgData = modify_to_plot(messagedata)
-            print("source.data",source.data, type(source.data))
             doc.add_next_tick_callback(partial(update, modifiedMsgData))
 
         except KeyboardInterrupt:
@@ -111,7 +90,7 @@ def subscribe_and_stream():
 colors = ["#762a83", "#76EEC6", "#53868B",
           "#FF1493", "#ADFF2F", "#292421", "#EE6A50"]
 
-fig = figure(plot_width=2000, plot_height=750, y_range=(0,7))
+fig = figure(plot_width=1450, plot_height=750, y_range=(0,7))
 
 lower_lt = 0.5
 upper_lt = 1.5
@@ -119,8 +98,7 @@ for muscle_index in range(7):
     loc = ((muscle_index+1)*lower_lt + (muscle_index+1)*upper_lt)/2.0
     line = Span(location=loc, dimension='width', line_color='black', line_dash='dashed', line_width=1)
     fig.add_layout(line)
-    fig.line(source=source, x='time', y='measured_M%s' % muscle_index,
-             line_width=2, alpha=0.85, color=colors[muscle_index])
+    fig.line(source=source, x='time', y='measured_M%s' % muscle_index, line_width=2, alpha=0.85, color=colors[muscle_index])
     fig.line(source=source, x='time', y='reference_M%s' %muscle_index, line_width=2, alpha=0.85, color='blue')
 
 doc.add_root(fig)
