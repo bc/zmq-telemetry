@@ -1,3 +1,4 @@
+import pdb
 from functools import partial
 from random import random
 from threading import Thread
@@ -46,8 +47,10 @@ doc = curdoc()
 @gen.coroutine
 def update(modifiedMsgData):
     global fig,cnt,source
-    fig.x_range.start = (time.time()-2)
-    fig.x_range.end = time.time()
+    # fig.x_range.end = time.time()
+    # fig.x_range.start = time.time() - 10
+    # fig.update()/
+    # pdb.set_trace()
     source.stream(modifiedMsgData,100)
 
 
@@ -69,35 +72,38 @@ def subscribe_and_stream():
             messagedata = poll_via_zmq_socket_subscriber(socket_sub, poller)
             # but update the document from callback
             timestamp = (messagedata['time'][0])
-            print("time.time",time.time())
-            print("timestamp",timestamp)
+            # print("time.time",time.time())
+            # print("timestamp",timestamp)
             diff = time.time() - timestamp
             #print(diff)
             modifiedMsgData = modify_to_plot(messagedata)
             doc.add_next_tick_callback(partial(update, modifiedMsgData))
-
         except KeyboardInterrupt:
-            print("CLEAN UP CLEAN UP EVERYBODY CLEANUP")
             while not socket_sub.closed:
                 #TODO check if fn is in right place
                 make_clean_exit(socket_sub)
+        except:
+            print("Unexpected error:", sys.exc_info()[0])
+            raise
 
 colors = ["#762a83", "#76EEC6", "#53868B",
           "#FF1493", "#ADFF2F", "#292421", "#EE6A50"]
 
-fig = figure(plot_width=1450, plot_height=750, y_range=(0,7))
+fig = figure(plot_width=1450, plot_height=750, y_range=(0,7), tools="xpan,xwheel_zoom,xbox_zoom,reset",  y_axis_location="right", )
 
 lower_lt = 0.5
 upper_lt = 1.5
 for muscle_index in range(7):
     loc = ((muscle_index+1)*lower_lt + (muscle_index+1)*upper_lt)/2.0
-    line = Span(location=loc, dimension='width', line_color='black', line_dash='dashed', line_width=1)
+    line = Span(location=loc, dimension='width', line_color='black', line_dash='dashed', line_width=0.4)
     fig.add_layout(line)
     fig.line(source=source, x='time', y='measured_M%s' % muscle_index, line_width=2, alpha=0.85, color=colors[muscle_index])
-    fig.line(source=source, x='time', y='reference_M%s' %muscle_index, line_width=2, alpha=0.85, color='blue')
+    fig.line(source=source, x='time', y='reference_M%s' %muscle_index, line_width=1, alpha=0.7, color='blue')
 
 doc.add_root(fig)
-
+# fig.x_range.start = (time.time()-10)
+# fig.x_range.end = time.time()
+fig.x_range.follow = "end"
 socket_sub = initialize_sub_socket(ip, port_sub)
 poller = zmq.Poller()
 
