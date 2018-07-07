@@ -48,11 +48,6 @@ def update(modifiedMsgData):
     global fig,cnt,source
     fig.x_range.start = (time.time()-2)
     fig.x_range.end = time.time()
-    source.data['time'] = list(reversed(source.data['time']))
-    print(type(source.data['reference_M1']))
-    for i in range(7):
-        source.data['measured_M%s'%i] = list(reversed(source.data['measured_M%s'%i]))
-        source.data['reference_M%s'%i] = list(reversed(source.data['reference_M%s'%i]))
     source.stream(modifiedMsgData,100)
 
 
