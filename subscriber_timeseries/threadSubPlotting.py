@@ -7,7 +7,7 @@ import time
 from bokeh.layouts import gridplot, row, layout, column
 from bokeh.models import ColumnDataSource
 from bokeh.plotting import curdoc, figure
-from bokeh.models import LinearAxis, Range1d, Span, DatetimeTickFormatter, FactorRange
+from bokeh.models import LinearAxis, Range1d, Span, DatetimeTickFormatter, FactorRange, Label
 
 from tornado import gen
 from helper_functions import *
@@ -47,10 +47,12 @@ cnt = 0
 @gen.coroutine
 def update(modifiedMsgData):
     global fig,cnt,source
-    fig.x_range.end = time.time() + 0.5
+    fig.title.text = str(time.time())
+    fig.x_range.end = time.time() + 0.15
     fig.x_range.start = time.time() - 2
     line = Span(location=time.time(), dimension='height', line_color='black', line_dash='dashed', line_width=0.4)
     fig.add_layout(line)
+
     source.stream(modifiedMsgData,100)
 
 
@@ -87,17 +89,12 @@ def subscribe_and_stream():
         except:
             print("Unexpected error:", sys.exc_info()[0])
             raise
-def cb():
-   # this works:
-   fig.x_range.start = time.time() - 2
-   fig.x_range.end  = time.time() + 0.5
-   line = Span(location=time.time(), dimension='height', line_color='black', line_dash='dashed', line_width=0.4)
-   fig.add_layout(line)
 
 colors = ["#762a83", "#76EEC6", "#53868B",
           "#FF1493", "#ADFF2F", "#292421", "#EE6A50"]
 
 fig = figure(plot_width=1450, plot_height=750, x_range=(time.time()-2, time.time()+1), y_range=(0,7), tools="xpan,xwheel_zoom,xbox_zoom,reset",  y_axis_location="right", )
+fig.title.text = str(time.time())
 
 lower_lt = 0.5
 upper_lt = 1.5
