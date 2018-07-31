@@ -59,7 +59,7 @@ def update(modifiedMsgData):
     fig.x_range.start = time.time() - 2
     line = Span(location=time.time(), dimension='height', line_color='black', line_dash='dashed', line_width=0.4)
     fig.add_layout(line)
-    print(callaback_cnt, len(callaback_cnt))
+    #print(callaback_cnt, len(callaback_cnt))
     source.stream(modifiedMsgData,100)
 
 
@@ -83,11 +83,8 @@ def subscribe_and_stream():
             flag = False
             messagedata = poll_via_zmq_socket_subscriber(socket_sub, poller)
             # but update the document from callback
+            print("msgdata",messagedata)
             timestamp = (messagedata['time'][0])
-            #print("time.time()", time.time())
-            #print("timestamp",timestamp)
-            # print("time.time",time.time())
-            #print("timestamp",timestamp)
             diff = time.time() - timestamp
             print(diff)
             modifiedMsgData = modify_to_plot(messagedata)

@@ -26,6 +26,7 @@ def compose_column_data_source_entry(message_data):
     extract commands via commands = message_data[0][2].
     Currently they are not used.
     """
+    print("MESSAGEDATA",message_data)
     measuredForces = message_data[0][0]
     referenceForces = message_data[0][1]
     timestamp = message_data[1]
