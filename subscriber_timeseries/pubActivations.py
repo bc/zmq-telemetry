@@ -13,7 +13,7 @@ def instantiate_zmq_publisher(port=12345):
     return(socket)
 
 k = 0
-batch_size = 2
+batch_size = 1
 def publish_observation(initialized_socket):
     sleep_time = 0.1
     topic = b"map"

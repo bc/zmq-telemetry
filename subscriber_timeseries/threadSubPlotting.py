@@ -25,20 +25,7 @@ else:
 port_sub = '12345'
 
 # this must only be modified from a Bokeh session callback
-source = ColumnDataSource(dict(time=[], measured_M0=[],
-                               measured_M1=[],
-                               measured_M2=[],
-                               measured_M3=[],
-                               measured_M4=[],
-                               measured_M5=[],
-                               measured_M6=[],
-                               reference_M0=[],
-                               reference_M1=[],
-                               reference_M2=[],
-                               reference_M3=[],
-                               reference_M4=[],
-                               reference_M5=[],
-                               reference_M6=[]))
+source = ColumnDataSource(dict(time=[], measured_M0=[],reference_M0=[]))
 
 # This is important! Save curdoc() to make sure all threads
 # see the same document.
@@ -49,9 +36,6 @@ callaback_cnt = []
 def update(modifiedMsgData):
     global start_time
     if abs(start_time - time.time()) <= 100:
-        # print(start_time)
-        # print(time.time())
-        # print(start_time - time.time())
         callaback_cnt.append(time.time())
     global fig,cnt,source
     fig.title.text = str(time.time())
@@ -68,8 +52,9 @@ def modify_to_plot(messagedata):
         Modified to accomodate in a single graph'''
     gap = 1.0
     for i in range(7):
-        messagedata['measured_M%s' % i] = [(messagedata['measured_M%s' % i][0]+(i)*gap)]
-        messagedata['reference_M%s' % i] = [(messagedata['reference_M%s' % i][0]+(i)*gap)]
+        messagedata['measured_M0'][i] = [(messagedata['measured_M0'][i]+(i)*gap)]
+        messagedata['reference_M0'][i] = [(messagedata['reference_M0'][i]+(i)*gap)]
+    messagedata['time'] = [messagedata['time']]*7
     return messagedata
 
 cnt = 0
@@ -109,8 +94,8 @@ for muscle_index in range(7):
     loc = ((muscle_index+1)*lower_lt + (muscle_index+1)*upper_lt)/2.0
     line = Span(location=loc, dimension='width', line_color='black', line_dash='dashed', line_width=0.4)
     fig.add_layout(line)
-    fig.line(source=source, x='time', y='measured_M%s' % muscle_index, line_width=2, alpha=0.85, color=colors[muscle_index])
-    fig.line(source=source, x='time', y='reference_M%s' %muscle_index, line_width=1, alpha=0.7, color='blue')
+    fig.line(source=source, x='time', y='measured_M0'[muscle_index], line_width=2, alpha=0.85, color=colors[muscle_index])
+    fig.line(source=source, x='time', y='reference_M0'[muscle_index], line_width=1, alpha=0.7, color='blue')
 
 doc.add_root(fig)
 socket_sub = initialize_sub_socket(ip, port_sub)
